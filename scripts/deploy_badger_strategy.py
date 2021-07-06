@@ -4,7 +4,7 @@ from scripts.deploy_badger_vault import deploy_vault
 import yaml
 import click
 
-from brownie import TestStrategyUpgradeable, AdminUpgradeabilityProxy, accounts, network, web3, Vault
+from brownie import TestStrategyUpgradeable, AdminUpgradeabilityProxy, web3, Vault
 from eth_utils import is_checksum_address
 
 PACKAGE_VERSION = yaml.safe_load(
@@ -38,8 +38,7 @@ def get_address(msg: str, default: str = None) -> str:
         # NOTE: Only display default once
         val = click.prompt(msg)
 
-
-def main():
+def deploy_strategy_logic(logic):
     """
     Deploy the strat logic
     """
@@ -96,7 +95,7 @@ def main():
             keeper
         ]
 
-        strat_logic = TestStrategyUpgradeable.deploy({'from': dev})
+        strat_logic = logic.deploy({'from': dev})
         strat_proxy = AdminUpgradeabilityProxy.deploy(strat_logic, proxyAdmin, strat_logic.initialize.encode_input(*args), {'from': dev})
 
         print(strat_proxy)
@@ -106,3 +105,6 @@ def main():
         click.echo(
             "    NOTE: Strategy is not registered in Registry, please register!"
         )
+
+def main():
+    deploy_strategy_logic(TestStrategyUpgradeable)

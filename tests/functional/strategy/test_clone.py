@@ -18,7 +18,8 @@ def other_vault(gov, Vault, other_token):
 
 @pytest.fixture
 def strategy(gov, strategist, keeper, rewards, vault, TestStrategy):
-    strategy = strategist.deploy(TestStrategy, vault)
+    strategy = strategist.deploy(TestStrategy)
+    strategy.initialize(vault, strategist, rewards, keeper)
 
     strategy.setKeeper(keeper, {"from": strategist})
     vault.addStrategy(
