@@ -117,6 +117,7 @@ def main():
         
         vault_logic = Vault.deploy({'from': dev})
         vault_proxy = AdminUpgradeabilityProxy.deploy(vault_logic, proxyAdmin, vault_logic.initialize.encode_input(*args), {'from': dev})
+
         print(vault_proxy)
         print("Vault Args", args)
         click.echo(f"New Vault Release deployed [{vault_proxy.address}]")

@@ -14,7 +14,7 @@ PACKAGE_VERSION = yaml.safe_load(
     (Path(__file__).parent.parent / "ethpm-config.yaml").read_text()
 )["version"]
 
-defaults = { # TODO: Use Badger on-chain Registry for all versions & defaults
+defaults = {  # TODO: Use Badger on-chain Registry for all versions & defaults
     'vault': web3.toChecksumAddress("0x55949f769d0af7453881435612561d109fff07b8"),
     'stratLogic': web3.toChecksumAddress("0x0000000000000000000000000000000000000000"),
     'proxyAdmin': web3.toChecksumAddress("0xB10b3Af646Afadd9C62D663dd5d226B15C25CdFA"),
@@ -22,6 +22,7 @@ defaults = { # TODO: Use Badger on-chain Registry for all versions & defaults
     'rewards': web3.toChecksumAddress("0xB65cef03b9B89f99517643226d76e286ee999e77"),
     'keeper': web3.toChecksumAddress("0xB65cef03b9B89f99517643226d76e286ee999e77"),
 }
+
 
 def get_address(msg: str, default: str = None) -> str:
     val = click.prompt(msg, default=default)
@@ -47,7 +48,8 @@ def main():
     Deploy the strat logic
     """
     click.echo(f"You are using the '{network.show_active()}' network")
-    dev = accounts.load(click.prompt("Account", type=click.Choice(accounts.load())))
+    dev = accounts.load(click.prompt(
+        "Account", type=click.Choice(accounts.load())))
     click.echo(f"You are using: 'dev' [{dev.address}]")
 
     click.echo(
@@ -64,13 +66,15 @@ def main():
         # use_existing_logic = True
         # strat_logic_address = get_address("Strat Logic Address", default=defaults['stratLogic'])
         use_existing_logic = False
-        click.echo("Existing Vault Logic not supported, defaulting Deploy Logic Contracts to 'Yes'")
+        click.echo(
+            "Existing Vault Logic not supported, defaulting Deploy Logic Contracts to 'Yes'")
 
     vault = get_address("Strat Vault", default=defaults['vault'])
     proxyAdmin = get_address("Proxy Admin", default=defaults['proxyAdmin'])
 
     rewards = get_address("Rewards contract", default=defaults['rewards'])
-    strategist = get_address("Strategist Address", default=defaults['strategist'])
+    strategist = get_address("Strategist Address",
+                             default=defaults['strategist'])
     keeper = get_address("Keeper Address", default=defaults['keeper'])
 
     click.echo(
@@ -95,10 +99,26 @@ def main():
             rewards,
             keeper
         ]
-        
+
+        # strat_logic.initialize.encode_input(*args)
+
         strat_logic = TestStrategyUpgradeable.deploy({'from': dev})
-        strat_proxy = AdminUpgradeabilityProxy.deploy(strat_logic, proxyAdmin, strat_logic.initialize.encode_input(*args), {'from': dev})
+        # strat_proxy = AdminUpgradeabilityProxy.deploy(strat_logic, proxyAdmin, strat_logic.initialize.encode_input(*args), {'from': dev})
+
+        strat_proxy = AdminUpgradeabilityProxy.deploy(
+            strat_logic, proxyAdmin, web3.toBytes(hexstr="0x"), {'from': dev})
+        
+        AdminUpgradeabilityProxy.remove(strat_proxy)
+        strat_proxy = TestStrategyUpgradeable.at(strat_proxy.address)
+
+        print(args)
+        strat_proxy.initialize(vault,
+            strategist,
+            rewards,
+            keeper, {'from': dev})
+
         print(strat_proxy)
+        print(dir(strat_proxy))
         print("Strat Args", args)
         click.echo(f"New Strategy Release deployed [{strat_proxy.address}]")
         click.echo(
