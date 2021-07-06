@@ -3,14 +3,14 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {BaseStrategyInitializable, StrategyParams, VaultAPI} from "../BaseStrategy.sol";
+import {BaseStrategyUpgradeable, StrategyParams, VaultAPI} from "../BaseStrategyUpgradeable.sol";
 
 /*
  * This Strategy serves as both a mock Strategy for testing, and an example
  * for integrators on how to use BaseStrategy
  */
 
-contract TestStrategy is BaseStrategyInitializable {
+contract TestStrategy is BaseStrategyUpgradeable {
     bool public doReentrancy;
     bool public delegateEverything;
 
@@ -18,8 +18,6 @@ contract TestStrategy is BaseStrategyInitializable {
     // Initialize this to some fake address, because we're just using it
     // to test `BaseStrategy.protectedTokens()`
     address public constant protectedToken = address(0xbad);
-
-    constructor(address _vault) public BaseStrategyInitializable(_vault) {}
 
     function name() external view override returns (string memory) {
         return string(abi.encodePacked("TestStrategy ", apiVersion()));

@@ -6,10 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
-// Cannot import 2 remapped github repo from same author, see: https://github.com/eth-brownie/brownie/issues/1116
-// NOTE: If you want to use PausableUpgradeable
-// import "@upgradeable/contracts/utils/PausableUpgradeable.sol";
-
 struct StrategyParams {
     uint256 performanceFee;
     uint256 activation;
