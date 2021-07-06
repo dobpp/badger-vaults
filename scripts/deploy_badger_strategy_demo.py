@@ -96,22 +96,8 @@ def main():
             keeper
         ]
 
-        # strat_logic.initialize.encode_input(*args)
-
         strat_logic = TestStrategyUpgradeable.deploy({'from': dev})
-        # strat_proxy = AdminUpgradeabilityProxy.deploy(strat_logic, proxyAdmin, strat_logic.initialize.encode_input(*args), {'from': dev})
-
-        strat_proxy = AdminUpgradeabilityProxy.deploy(
-            strat_logic, proxyAdmin, web3.toBytes(hexstr="0x"), {'from': dev})
-        
-        AdminUpgradeabilityProxy.remove(strat_proxy)
-        strat_proxy = TestStrategyUpgradeable.at(strat_proxy.address)
-
-        print(args)
-        strat_proxy.initialize(vault,
-            strategist,
-            rewards,
-            keeper, {'from': dev})
+        strat_proxy = AdminUpgradeabilityProxy.deploy(strat_logic, proxyAdmin, strat_logic.initialize.encode_input(*args), {'from': dev})
 
         print(strat_proxy)
         print(dir(strat_proxy))
