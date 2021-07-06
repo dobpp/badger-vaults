@@ -4,7 +4,7 @@ from brownie import ZERO_ADDRESS
 
 
 def test_good_migration(
-    token, strategy, vault, gov, strategist, guardian, TestStrategy, rando, chain
+    token, strategy, vault, gov, strategist, guardian, just_strategy, rando, chain
 ):
     # Call this once to seed the strategy with debt
     chain.sleep(1)
@@ -13,7 +13,7 @@ def test_good_migration(
     strategy_debt = vault.strategies(strategy).dict()["totalDebt"]
     assert strategy_debt == token.balanceOf(strategy)
 
-    new_strategy = strategist.deploy(TestStrategy, vault)
+    new_strategy = just_strategy
     assert vault.strategies(new_strategy).dict()["totalDebt"] == 0
     assert token.balanceOf(new_strategy) == 0
 
@@ -48,13 +48,16 @@ def test_bad_migration(
     )
     different_vault.unpause({"from": gov})
     different_vault.setDepositLimit(2 ** 256 - 1, {"from": gov})
-    new_strategy = strategist.deploy(TestStrategy, different_vault)
+
+    new_strategy = strategist.deploy(TestStrategy)
+    new_strategy.initialize(different_vault, strategist, strategist, strategist)
 
     # Can't migrate to a strategy with a different vault
     with brownie.reverts():
         vault.migrateStrategy(strategy, new_strategy, {"from": gov})
 
-    new_strategy = strategist.deploy(TestStrategy, vault)
+    new_strategy = strategist.deploy(TestStrategy)
+    new_strategy.initialize(different_vault, strategist, strategist, strategist)
 
     # Can't migrate if you're not the Vault  or governance
     with brownie.reverts():
@@ -66,10 +69,10 @@ def test_bad_migration(
 
 
 def test_migrated_strategy_can_call_harvest(
-    token, strategy, vault, gov, TestStrategy, chain
+    token, strategy, vault, gov, just_strategy, chain
 ):
 
-    new_strategy = gov.deploy(TestStrategy, vault)
+    new_strategy = just_strategy
     vault.migrateStrategy(strategy, new_strategy, {"from": gov})
 
     # send profit to the old strategy

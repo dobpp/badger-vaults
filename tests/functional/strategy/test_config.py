@@ -15,29 +15,27 @@ def test_api_adherrance(check_api_adherrance, TestStrategy, interface):
     check_api_adherrance(TestStrategy, interface.StrategyAPI)
 
 
-def test_strategy_deployment(strategist, vault, TestStrategy):
-    strategy = strategist.deploy(TestStrategy, vault)
+def test_strategy_deployment(strategist, vault, just_strategy):
     # Addresses
-    assert strategy.strategist() == strategist
-    assert strategy.rewards() == strategist
-    assert strategy.keeper() == strategist
-    assert strategy.want() == vault.token()
-    assert strategy.apiVersion() == PACKAGE_VERSION
-    assert strategy.name() == "TestStrategy " + strategy.apiVersion()
-    assert strategy.delegatedAssets() == 0
+    assert just_strategy.strategist() == strategist
+    assert just_strategy.rewards() == strategist
+    assert just_strategy.keeper() == strategist
+    assert just_strategy.want() == vault.token()
+    assert just_strategy.apiVersion() == PACKAGE_VERSION
+    assert just_strategy.name() == "TestStrategy " + just_strategy.apiVersion()
+    assert just_strategy.delegatedAssets() == 0
 
-    assert not strategy.emergencyExit()
+    assert not just_strategy.emergencyExit()
 
     # Should not trigger until it is approved
-    assert not strategy.harvestTrigger(0)
-    assert not strategy.tendTrigger(0)
+    assert not just_strategy.harvestTrigger(0)
+    assert not just_strategy.tendTrigger(0)
 
 
-def test_strategy_no_reinit(strategist, vault, TestStrategy):
-    strategy = strategist.deploy(TestStrategy, vault)
+def test_strategy_no_reinit(just_strategy, strategist, vault):
 
     with brownie.reverts("Strategy already initialized"):
-        strategy.initialize(vault, strategist, strategist, strategist)
+        just_strategy.initialize(vault, strategist, strategist, strategist)
 
 
 def test_strategy_setEmergencyExit(strategy, gov, strategist, rando, chain):
