@@ -1,4 +1,5 @@
 from pathlib import Path
+from scripts.connect_account import connect_account
 import yaml
 import click
 
@@ -42,22 +43,7 @@ def get_address(msg: str, default: str = None) -> str:
         # NOTE: Only display default once
         val = click.prompt(msg)
 
-
-def main():
-    """
-    Deploy the vault logic
-    Deploy the strat logic
-
-    Deploy the vault proxy
-    Init the vault proxy
-
-    Deploy the strat proxy
-    Init the strat proxy
-    """
-    click.echo(f"You are using the '{network.show_active()}' network")
-    dev = accounts.load(click.prompt("Account", type=click.Choice(accounts.load())))
-    click.echo(f"You are using: 'dev' [{dev.address}]")
-
+def deploy_vault(dev):
     click.echo(
         f"""
         Release Information
@@ -117,6 +103,8 @@ def main():
         
         vault_logic = Vault.deploy({'from': dev})
         vault_proxy = AdminUpgradeabilityProxy.deploy(vault_logic, proxyAdmin, vault_logic.initialize.encode_input(*args), {'from': dev})
+        AdminUpgradeabilityProxy.remove(vault_proxy)
+        vault_proxy = Vault.at(vault_proxy.address)
 
         print(vault_proxy)
         print("Vault Args", args)
@@ -124,3 +112,21 @@ def main():
         click.echo(
             "    NOTE: Vault is not registered in Registry, please register!"
         )
+    
+    return vault_proxy
+
+def main():
+    """
+    Deploy the vault logic
+    Deploy the strat logic
+
+    Deploy the vault proxy
+    Init the vault proxy
+
+    Deploy the strat proxy
+    Init the strat proxy
+    """
+    dev = connect_account()
+    deploy_vault(dev)
+
+    

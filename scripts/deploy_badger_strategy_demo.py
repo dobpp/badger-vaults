@@ -1,21 +1,17 @@
-"""
-NOTE: THIS IS A DEMO
-Real deployment is done in each brownie mix
-"""
 from pathlib import Path
+from scripts.connect_account import connect_account
+from scripts.deploy_badger_vault import deploy_vault
 import yaml
 import click
 
-from brownie import TestStrategyUpgradeable, AdminUpgradeabilityProxy, accounts, network, web3
+from brownie import TestStrategyUpgradeable, AdminUpgradeabilityProxy, accounts, network, web3, Vault
 from eth_utils import is_checksum_address
-from semantic_version import Version
 
 PACKAGE_VERSION = yaml.safe_load(
     (Path(__file__).parent.parent / "ethpm-config.yaml").read_text()
 )["version"]
 
 defaults = {  # TODO: Use Badger on-chain Registry for all versions & defaults
-    'vault': web3.toChecksumAddress("0x55949f769d0af7453881435612561d109fff07b8"),
     'stratLogic': web3.toChecksumAddress("0x0000000000000000000000000000000000000000"),
     'proxyAdmin': web3.toChecksumAddress("0xB10b3Af646Afadd9C62D663dd5d226B15C25CdFA"),
     'strategist': web3.toChecksumAddress("0xB65cef03b9B89f99517643226d76e286ee999e77"),
@@ -47,10 +43,7 @@ def main():
     """
     Deploy the strat logic
     """
-    click.echo(f"You are using the '{network.show_active()}' network")
-    dev = accounts.load(click.prompt(
-        "Account", type=click.Choice(accounts.load())))
-    click.echo(f"You are using: 'dev' [{dev.address}]")
+    dev = connect_account()
 
     click.echo(
         f"""
@@ -68,10 +61,13 @@ def main():
         use_existing_logic = False
         click.echo(
             "Existing Vault Logic not supported, defaulting Deploy Logic Contracts to 'Yes'")
+    if click.confirm("Deploy New Vault", default="Y"):
+        vault = deploy_vault(dev)
+        click.echo(f"Using new Vault {vault.name()} at {vault.address}")
+    else: 
+        vault = Vault.at(get_address("Strat Vault"))
 
-    vault = get_address("Strat Vault", default=defaults['vault'])
     proxyAdmin = get_address("Proxy Admin", default=defaults['proxyAdmin'])
-
     rewards = get_address("Rewards contract", default=defaults['rewards'])
     strategist = get_address("Strategist Address",
                              default=defaults['strategist'])
