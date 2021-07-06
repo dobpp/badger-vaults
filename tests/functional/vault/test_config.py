@@ -161,8 +161,8 @@ def test_vault_updateStrategy(
         assert vault.strategies(strategy).dict()[key] == max
 
 
-def test_min_max_debtIncrease(gov, vault, TestStrategy):
-    strategy = gov.deploy(TestStrategy, vault)
+def test_min_max_debtIncrease(gov, vault, just_strategy):
+    strategy = just_strategy
     # Can't set min > max or max < min in adding a strategy
     with brownie.reverts():
         vault.addStrategy(strategy, 1_000, 20_000, 10_000, 1_000, {"from": gov})

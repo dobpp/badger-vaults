@@ -44,14 +44,14 @@ def vault_with_false_returning_token(gov, Vault, token_false_return):
 
 
 def test_credit_available_minDebtPerHarvest_larger_than_available(
-    Vault, TestStrategy, token, gov
+    Vault, TestStrategy, token, gov, just_strategy
 ):
     vault = gov.deploy(Vault)
     vault.initialize(
         token, gov, gov, token.symbol() + " yVault", "yv" + token.symbol(), gov, gov
     )
     vault.setDepositLimit(MAX_UINT256, {"from": gov})
-    strategy = gov.deploy(TestStrategy, vault)
+    strategy = just_strategy
     vault.addStrategy(
         strategy,
         10000,  # 100% of Vault AUM

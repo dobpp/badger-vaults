@@ -208,7 +208,8 @@ def test_withdrawal_with_empty_queue(
     )
     vault.setDepositLimit(2 ** 256 - 1, {"from": gov})
 
-    strategy = gov.deploy(TestStrategy, vault)
+    strategy = gov.deploy(TestStrategy)
+    strategy.initialize(vault, gov, gov, gov)
     vault.addStrategy(strategy, 1000, 0, 10, 1000, {"from": gov})
 
     token.approve(vault, 2 ** 256 - 1, {"from": gov})
@@ -271,7 +272,8 @@ def test_withdrawal_with_reentrancy(
 
     vault.setDepositLimit(2 ** 256 - 1, {"from": gov})
 
-    strategy = gov.deploy(TestStrategy, vault)
+    strategy = gov.deploy(TestStrategy)
+    strategy.initialize(vault, gov, gov, gov)
     vault.addStrategy(strategy, 10_000, 0, 2 ** 256 - 1, 1000, {"from": gov})
 
     strategy._toggleReentrancyExploit()

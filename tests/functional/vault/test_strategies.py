@@ -19,28 +19,29 @@ def vault(gov, management, token, Vault):
 
 @pytest.fixture
 def strategy(gov, vault, TestStrategy):
-    # NOTE: Because the fixture has tokens in it already
-    yield gov.deploy(TestStrategy, vault)
+    strat = gov.deploy(TestStrategy)
+    strat.initialize(vault, gov, gov, gov)
+    yield strat
 
 
 @pytest.fixture
 def other_strategy(gov, vault, TestStrategy):
+    strat = gov.deploy(TestStrategy)
+    strat.initialize(vault, gov, gov, gov)
     # NOTE: Because the fixture has tokens in it already
-    yield gov.deploy(TestStrategy, vault)
-
+    yield strat
 
 @pytest.fixture
 def other_token(gov, Token):
     yield gov.deploy(Token, 18)
 
 
-def test_liquidation_after_hack(chain, gov, vault, token, TestStrategy):
+def test_liquidation_after_hack(chain, gov, vault, token, strategy):
     # Deposit into vault
     token.approve(vault, MAX_UINT256, {"from": gov})
     vault.deposit(1000, {"from": gov})
 
     # Deploy strategy and seed it with debt
-    strategy = gov.deploy(TestStrategy, vault)
     vault.addStrategy(strategy, 2_000, 0, 10 ** 21, 1000, {"from": gov})
     chain.sleep(1)
     strategy.harvest({"from": gov})
@@ -79,12 +80,15 @@ def strategy_with_wrong_vault(gov, token, vault, Vault, TestStrategy):
     assert otherVault.token() == token
     assert otherVault != vault
     otherVault.setDepositLimit(2 ** 256 - 1, {"from": gov})
-    yield gov.deploy(TestStrategy, otherVault)
+    strat = gov.deploy(TestStrategy)
+    strat.initialize(otherVault, gov, gov, gov)
+    yield strat
 
 
 @pytest.fixture
 def strategy_with_wrong_want_token(gov, vault, other_token, Token, TestStrategy):
-    strategy = gov.deploy(TestStrategy, vault)
+    strategy = gov.deploy(TestStrategy)
+    strategy.initialize(vault, gov, gov, gov)
     assert strategy.want() == vault.token()
     assert strategy.vault() == vault
     strategy._setWant(other_token)
@@ -345,10 +349,17 @@ def test_revokeStrategy(chain, gov, vault, strategy, rando):
     with brownie.reverts():
         vault.removeStrategyFromQueue(strategy, {"from": gov})
 
+def quick_deploy(gov, vault, TestStrategy):
+    """
+        Used just for the loop below
+    """
+    strat = gov.deploy(TestStrategy)
+    strat.initialize(vault, gov, gov, gov)
+    return strat
 
 def test_ordering(gov, vault, TestStrategy, rando):
     # Show that a lot of strategies get properly ordered
-    strategies = [gov.deploy(TestStrategy, vault) for _ in range(19)]
+    strategies = [quick_deploy(gov, vault, TestStrategy) for _ in range(19)]
 
     # Can't add un-approved strategies
     with brownie.reverts():
@@ -412,7 +423,9 @@ def test_ordering(gov, vault, TestStrategy, rando):
         assert vault.withdrawalQueue(idx) == strategy
 
     # Show that adding a new one properly orders
-    strategy = gov.deploy(TestStrategy, vault)
+    strategy = gov.deploy(TestStrategy)
+    strategy.initialize(vault, gov, gov, gov)
+    
     vault.addStrategy(strategy, 100, 10, 20, 1000, {"from": gov})
     strategies.append(strategy)
 

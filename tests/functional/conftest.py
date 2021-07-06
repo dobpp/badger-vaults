@@ -108,7 +108,7 @@ def strategy(gov, strategist, keeper, rewards, vault, TestStrategy, request):
 @pytest.fixture
 def just_strategy(vault, strategist, TestStrategy):
     strategy = strategist.deploy(TestStrategy)
-    strategy.initialize(vault, strategist, strategist, strategist)
+    strategy.initialize(vault, strategist, strategist, strategist, {"from": strategist})
     
     yield strategy
 
