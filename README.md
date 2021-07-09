@@ -1,4 +1,4 @@
-# Yearn Vault Contracts
+# Badger Vaults - Fork of Yearn V4.2.1
 
 Please read and be familiar with the [Specification](SPECIFICATION.md).
 
@@ -174,12 +174,12 @@ black .
 
 ## Security
 
-For security concerns, please visit [Bug Bounty](https://github.com/yearn/yearn-vaults/security/policy).
+For security concerns, please visit [Bug Bounty](https://immunefi.com/bounty/badger/).
 
 ## Documentation
 
-You can read more about Yearn Finance on our documentation [webpage](https://docs.yearn.finance).
+Documentation [webpage](https://www.notion.so/Badger-V2-Vaults-and-Brownie-Mix-5f2de471539349869a9f63995e74f780).
 
 ## Discussion
 
-For questions not covered in the docs, please visit [our Discord server](http://discord.yearn.finance).
+For questions not covered in the docs, please visit [our Discord server](https://discord.gg/dwSdN9g6Mw).
