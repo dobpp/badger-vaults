@@ -103,6 +103,8 @@ def deploy_vault(dev):
         
         vault_logic = Vault.deploy({'from': dev})
         vault_proxy = AdminUpgradeabilityProxy.deploy(vault_logic, proxyAdmin, vault_logic.initialize.encode_input(*args), {'from': dev})
+        
+        ## We delete from deploy and then fetch again so we can interact
         AdminUpgradeabilityProxy.remove(vault_proxy)
         vault_proxy = Vault.at(vault_proxy.address)
 
@@ -127,6 +129,7 @@ def main():
     Init the strat proxy
     """
     dev = connect_account()
-    deploy_vault(dev)
+    vault = deploy_vault(dev)
+    return vault
 
     

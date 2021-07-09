@@ -97,6 +97,9 @@ def deploy_strategy_logic(logic):
 
         strat_logic = logic.deploy({'from': dev})
         strat_proxy = AdminUpgradeabilityProxy.deploy(strat_logic, proxyAdmin, strat_logic.initialize.encode_input(*args), {'from': dev})
+        ## We delete from deploy and then fetch again so we can interact
+        AdminUpgradeabilityProxy.remove(strat_proxy)
+        strat_proxy = logic.at(strat_proxy.address)
 
         print(strat_proxy)
         print(dir(strat_proxy))
@@ -106,5 +109,9 @@ def deploy_strategy_logic(logic):
             "    NOTE: Strategy is not registered in Registry, please register!"
         )
 
+        return strat_proxy
+
 def main():
-    deploy_strategy_logic(TestStrategyUpgradeable)
+    strat = deploy_strategy_logic(TestStrategyUpgradeable)
+    return strat
+

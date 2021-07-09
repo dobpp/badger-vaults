@@ -292,7 +292,9 @@ def test_migrateStrategy(gov, vault, strategy, other_strategy, rando, TestStrate
 
     # Migrating not in the withdrawal queue (for coverage)
     vault.removeStrategyFromQueue(strategy, {"from": gov})
-    new_strategy = gov.deploy(TestStrategy, vault)
+    new_strategy = gov.deploy(TestStrategy)
+    new_strategy.initialize(vault, gov, gov, gov)
+
     vault.migrateStrategy(strategy, new_strategy, {"from": gov})
 
     # Can't migrate back again
@@ -304,7 +306,8 @@ def test_migrateStrategy(gov, vault, strategy, other_strategy, rando, TestStrate
         vault.migrateStrategy(new_strategy, strategy, {"from": gov})
 
     # Can't migrate to an already approved strategy
-    approved_strategy = gov.deploy(TestStrategy, vault)
+    approved_strategy = gov.deploy(TestStrategy)
+    approved_strategy.initialize(vault, gov, gov, gov)
     vault.addStrategy(approved_strategy, 100, 10, 20, 1000, {"from": gov})
     with brownie.reverts():
         vault.migrateStrategy(strategy, approved_strategy, {"from": gov})
@@ -387,7 +390,8 @@ def test_ordering(gov, vault, TestStrategy, rando):
         {"from": gov},
     )
 
-    other_strat = gov.deploy(TestStrategy, vault)
+    other_strat = gov.deploy(TestStrategy)
+    other_strat.initialize(vault, gov, gov, gov)
 
     # Do not add a strategy
     with brownie.reverts():
@@ -433,9 +437,11 @@ def test_ordering(gov, vault, TestStrategy, rando):
         assert vault.withdrawalQueue(idx) == strategy
 
     # NOTE: limited to only a certain amount of strategies
+    new_strategy = gov.deploy(TestStrategy)
+    new_strategy.initialize(vault, gov, gov, gov)
     with brownie.reverts():
         vault.addStrategy(
-            gov.deploy(TestStrategy, vault), 100, 10, 20, 1000, {"from": gov}
+            new_strategy, 100, 10, 20, 1000, {"from": gov}
         )
 
     # Show that removing from the middle properly orders
@@ -506,7 +512,7 @@ def test_addStategyToQueue(
     vault.removeStrategyFromQueue(other_strategy, {"from": gov})
 
     # Can't add a strategy to an already full queue
-    strategies = [gov.deploy(TestStrategy, vault) for _ in range(20)]
+    strategies = [quick_deploy(gov, vault, TestStrategy) for _ in range(20)]
     for s in strategies:
         vault.addStrategy(s, 100, 10, 20, 1000, {"from": gov})
     with brownie.reverts():
