@@ -1,8 +1,9 @@
 from pathlib import Path
+from scripts.connect_account import connect_account
 import yaml
 import click
 
-from brownie import Token, Vault, AdminUpgradeabilityProxy, Registry, accounts, network, web3
+from brownie import Token, Vault, AdminUpgradeabilityProxy, accounts, network, web3
 from eth_utils import is_checksum_address
 from semantic_version import Version
 
@@ -42,22 +43,7 @@ def get_address(msg: str, default: str = None) -> str:
         # NOTE: Only display default once
         val = click.prompt(msg)
 
-
-def main():
-    """
-    Deploy the vault logic
-    Deploy the strat logic
-
-    Deploy the vault proxy
-    Init the vault proxy
-
-    Deploy the strat proxy
-    Init the strat proxy
-    """
-    click.echo(f"You are using the '{network.show_active()}' network")
-    dev = accounts.load(click.prompt("Account", type=click.Choice(accounts.load())))
-    click.echo(f"You are using: 'dev' [{dev.address}]")
-\
+def deploy_vault(dev):
     click.echo(
         f"""
         Release Information
@@ -117,9 +103,33 @@ def main():
         
         vault_logic = Vault.deploy({'from': dev})
         vault_proxy = AdminUpgradeabilityProxy.deploy(vault_logic, proxyAdmin, vault_logic.initialize.encode_input(*args), {'from': dev})
+        
+        ## We delete from deploy and then fetch again so we can interact
+        AdminUpgradeabilityProxy.remove(vault_proxy)
+        vault_proxy = Vault.at(vault_proxy.address)
+
         print(vault_proxy)
         print("Vault Args", args)
         click.echo(f"New Vault Release deployed [{vault_proxy.address}]")
         click.echo(
             "    NOTE: Vault is not registered in Registry, please register!"
         )
+    
+    return vault_proxy
+
+def main():
+    """
+    Deploy the vault logic
+    Deploy the strat logic
+
+    Deploy the vault proxy
+    Init the vault proxy
+
+    Deploy the strat proxy
+    Init the strat proxy
+    """
+    dev = connect_account()
+    vault = deploy_vault(dev)
+    return vault
+
+    

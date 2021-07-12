@@ -86,7 +86,7 @@ token: public(ERC20)
 governance: public(address)
 management: public(address)
 guardian: public(address)
-pendingGovernance: address
+pendingGovernance: public(address)
 
 struct StrategyParams:
     performanceFee: uint256  # Strategist's fee (basis points)
@@ -325,7 +325,7 @@ def initialize(
             convert(self, bytes32)
         )
     )
-    self.paused = True ## Paused on Launch
+    self.paused = False ## Unpaused on Launch
 
 
 

@@ -24,8 +24,8 @@ def test_harvest_tend_authority(gov, keeper, strategist, strategy, rando, chain)
         strategy.harvest({"from": rando})
 
 
-def test_harvest_tend_trigger(chain, gov, vault, token, TestStrategy):
-    strategy = gov.deploy(TestStrategy, vault)
+def test_harvest_tend_trigger(chain, gov, vault, token, just_strategy):
+    strategy = just_strategy
     # Trigger doesn't work until strategy is added
     assert not strategy.harvestTrigger(0)
 

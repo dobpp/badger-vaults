@@ -1,14 +1,21 @@
-# Yearn Vault Contracts
+# Badger Vaults - Fork of Yearn V4.2.1
 
 Please read and be familiar with the [Specification](SPECIFICATION.md).
 
-This repository is the set of smart contracts that are used for the Yearn Vaults.
-It contains the requirements, code, deployment scripts, and tests necessary for the
-core protocol, including a inheritable template strategy for use with Solidity-based
-strategies that interact with Yearn Vaults. These contracts are used to create a simple
-way to generate high risk-adjusted returns for depositors of various assets via best-
-in-class lending protocols, liquidity pools, and community-made yield farming strategies
-on Ethereum.
+Badger V2 Vaults - Fork of Yearn with extra checks
+
+
+## Change from Yearn
+Upgradeable Contracts
+Lost ability to clone strategies
+Pausability of vault
+Lock for Block
+Smart Contracts need to be approved
+
+pendingGovernance is public
+
+Badger Registry
+
 
 ## Requirements
 
@@ -174,12 +181,13 @@ black .
 
 ## Security
 
-For security concerns, please visit [Bug Bounty](https://github.com/yearn/yearn-vaults/security/policy).
+For security concerns, please visit [Bug Bounty](https://immunefi.com/bounty/badger/).
 
 ## Documentation
 
-You can read more about Yearn Finance on our documentation [webpage](https://docs.yearn.finance).
+Documentation [webpage](https://www.notion.so/Badger-V2-Vaults-and-Brownie-Mix-5f2de471539349869a9f63995e74f780).
 
 ## Discussion
 
-For questions not covered in the docs, please visit [our Discord server](http://discord.yearn.finance).
+For questions not covered in the docs, please visit [our Discord server](https://discord.gg/dwSdN9g6Mw).
+

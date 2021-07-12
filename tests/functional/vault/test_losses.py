@@ -18,8 +18,9 @@ def vault(gov, token, Vault):
 
 @pytest.fixture
 def strategy(gov, vault, TestStrategy):
-    # NOTE: Because the fixture has tokens in it already
-    yield gov.deploy(TestStrategy, vault)
+    strat = gov.deploy(TestStrategy)
+    strat.initialize(vault, gov, gov, gov)
+    yield strat
 
 
 def test_losses_updates_less_and_debt(chain, vault, strategy, gov, token):

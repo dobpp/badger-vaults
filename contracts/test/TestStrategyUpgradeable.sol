@@ -10,7 +10,7 @@ import {BaseStrategyUpgradeable, StrategyParams, VaultAPI} from "../BaseStrategy
  * for integrators on how to use BaseStrategy
  */
 
-contract TestStrategy is BaseStrategyUpgradeable {
+contract TestStrategyUpgradeable is BaseStrategyUpgradeable {
     bool public doReentrancy;
     bool public delegateEverything;
 

@@ -1,5 +1,12 @@
 import brownie
 
+def quick_deploy(gov, vault, TestStrategy):
+    """
+        Used just for the loop below
+    """
+    strat = gov.deploy(TestStrategy)
+    strat.initialize(vault, gov, gov, gov)
+    return strat
 
 def test_multiple_withdrawals(token, gov, Vault, TestStrategy, chain):
     # Need a fresh vault to do this math right
@@ -19,7 +26,7 @@ def test_multiple_withdrawals(token, gov, Vault, TestStrategy, chain):
     vault.deposit(1_000_000, {"from": gov})
 
     starting_balance = token.balanceOf(vault)
-    strategies = [gov.deploy(TestStrategy, vault) for _ in range(5)]
+    strategies = [quick_deploy(gov, vault, TestStrategy) for _ in range(5)]
     for s in strategies:
         vault.addStrategy(
             s,
@@ -55,7 +62,7 @@ def test_multiple_withdrawals(token, gov, Vault, TestStrategy, chain):
 def test_forced_withdrawal(token, gov, vault, TestStrategy, rando, chain):
     vault.setManagementFee(0, {"from": gov})  # Just makes it easier later
     # Add strategies
-    strategies = [gov.deploy(TestStrategy, vault) for _ in range(5)]
+    strategies = [quick_deploy(gov, vault, TestStrategy) for _ in range(5)]
     for s in strategies:
         vault.addStrategy(s, 2_000, 0, 10 ** 21, 1000, {"from": gov})
 
@@ -139,10 +146,11 @@ def test_progressive_withdrawal(
         token.symbol() + " yVault",
         "yv" + token.symbol(),
         guardian,
+        {"from": gov}
     )
     vault.setDepositLimit(2 ** 256 - 1, {"from": gov})
 
-    strategies = [gov.deploy(TestStrategy, vault) for _ in range(2)]
+    strategies = [quick_deploy(gov, vault, TestStrategy) for _ in range(2)]
     for s in strategies:
         vault.addStrategy(s, 1000, 0, 10, 1000, {"from": gov})
 
@@ -208,7 +216,8 @@ def test_withdrawal_with_empty_queue(
     )
     vault.setDepositLimit(2 ** 256 - 1, {"from": gov})
 
-    strategy = gov.deploy(TestStrategy, vault)
+    strategy = gov.deploy(TestStrategy)
+    strategy.initialize(vault, gov, gov, gov)
     vault.addStrategy(strategy, 1000, 0, 10, 1000, {"from": gov})
 
     token.approve(vault, 2 ** 256 - 1, {"from": gov})
@@ -271,7 +280,8 @@ def test_withdrawal_with_reentrancy(
 
     vault.setDepositLimit(2 ** 256 - 1, {"from": gov})
 
-    strategy = gov.deploy(TestStrategy, vault)
+    strategy = gov.deploy(TestStrategy)
+    strategy.initialize(vault, gov, gov, gov)
     vault.addStrategy(strategy, 10_000, 0, 2 ** 256 - 1, 1000, {"from": gov})
 
     strategy._toggleReentrancyExploit()

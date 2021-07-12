@@ -4,48 +4,46 @@ import brownie
 FEE_MAX = 10_000
 
 
-def test_performance_fees(gov, vault, token, TestStrategy, rewards, strategist, chain):
+def test_performance_fees(gov, vault, token, just_strategy, rewards, strategist, chain):
     vault.setManagementFee(0, {"from": gov})
     vault.setPerformanceFee(450, {"from": gov})
 
-    strategy = strategist.deploy(TestStrategy, vault)
-    vault.addStrategy(strategy, 2_000, 1000, 1000, 50, {"from": gov})
+    vault.addStrategy(just_strategy, 2_000, 1000, 1000, 50, {"from": gov})
 
     assert vault.balanceOf(rewards) == 0
-    assert vault.balanceOf(strategy) == 0
+    assert vault.balanceOf(just_strategy) == 0
 
-    token.transfer(strategy, 10 ** token.decimals(), {"from": gov})
+    token.transfer(just_strategy, 10 ** token.decimals(), {"from": gov})
     chain.sleep(1)
-    vault.setStrategyEnforceChangeLimit(strategy, False, {"from": gov})
-    strategy.harvest({"from": strategist})
+    vault.setStrategyEnforceChangeLimit(just_strategy, False, {"from": gov})
+    just_strategy.harvest({"from": strategist})
 
     assert vault.balanceOf(rewards) == 0.045 * 10 ** token.decimals()
-    assert vault.balanceOf(strategy) == 0.005 * 10 ** token.decimals()
+    assert vault.balanceOf(just_strategy) == 0.005 * 10 ** token.decimals()
 
 
-def test_zero_fees(gov, vault, token, TestStrategy, rewards, strategist, chain):
+def test_zero_fees(gov, vault, token, just_strategy, rewards, strategist, chain):
     vault.setManagementFee(0, {"from": gov})
     vault.setPerformanceFee(0, {"from": gov})
 
-    strategy = strategist.deploy(TestStrategy, vault)
-    vault.addStrategy(strategy, 2_000, 1000, 1000, 0, {"from": gov})
+    vault.addStrategy(just_strategy, 2_000, 1000, 1000, 0, {"from": gov})
 
     assert vault.balanceOf(rewards) == 0
-    assert vault.balanceOf(strategy) == 0
+    assert vault.balanceOf(just_strategy) == 0
 
-    token.transfer(strategy, 10 ** token.decimals(), {"from": gov})
+    token.transfer(just_strategy, 10 ** token.decimals(), {"from": gov})
     chain.sleep(1)
-    vault.setStrategyEnforceChangeLimit(strategy, False, {"from": gov})
-    strategy.harvest({"from": strategist})
+    vault.setStrategyEnforceChangeLimit(just_strategy, False, {"from": gov})
+    just_strategy.harvest({"from": strategist})
 
     assert vault.managementFee() == 0
     assert vault.performanceFee() == 0
-    assert vault.strategies(strategy).dict()["performanceFee"] == 0
+    assert vault.strategies(just_strategy).dict()["performanceFee"] == 0
     assert vault.balanceOf(rewards) == 0
-    assert vault.balanceOf(strategy) == 0
+    assert vault.balanceOf(just_strategy) == 0
 
 
-def test_max_fees(gov, vault, token, TestStrategy, rewards, strategist):
+def test_max_fees(gov, vault, token, just_strategy, rewards, strategist):
     # performance fee should not be higher than MAX
     vault.setPerformanceFee(FEE_MAX / 2, {"from": gov})
     with brownie.reverts():
@@ -58,21 +56,20 @@ def test_max_fees(gov, vault, token, TestStrategy, rewards, strategist):
         vault.setManagementFee(FEE_MAX + 1, {"from": gov})
 
     # addStrategy should check for MAX FEE
-    strategy = strategist.deploy(TestStrategy, vault)
     with brownie.reverts():
-        vault.addStrategy(strategy, 2_000, 1000, 1000, FEE_MAX / 2 + 1, {"from": gov})
+        vault.addStrategy(just_strategy, 2_000, 1000, 1000, FEE_MAX / 2 + 1, {"from": gov})
 
     # updateStrategyPerformanceFee should check for max to be MAX FEE / 2
-    vault.addStrategy(strategy, 2_000, 1000, 1000, FEE_MAX / 2, {"from": gov})
+    vault.addStrategy(just_strategy, 2_000, 1000, 1000, FEE_MAX / 2, {"from": gov})
     vault_performance_fee = vault.performanceFee()
     with brownie.reverts():
-        vault.updateStrategyPerformanceFee(strategy, FEE_MAX / 2 + 1, {"from": gov})
+        vault.updateStrategyPerformanceFee(just_strategy, FEE_MAX / 2 + 1, {"from": gov})
 
     # updateStrategyPerformanceFee should check for max to be MAX FEE / 2
     vault.setPerformanceFee(0, {"from": gov})
-    vault.updateStrategyPerformanceFee(strategy, FEE_MAX / 2, {"from": gov})
+    vault.updateStrategyPerformanceFee(just_strategy, FEE_MAX / 2, {"from": gov})
     with brownie.reverts():
-        vault.updateStrategyPerformanceFee(strategy, FEE_MAX / 2 + 1, {"from": gov})
+        vault.updateStrategyPerformanceFee(just_strategy, FEE_MAX / 2 + 1, {"from": gov})
 
 
 def test_delegated_fees(chain, rewards, vault, strategy, gov, token):

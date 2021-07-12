@@ -6,10 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
-// Cannot import 2 remapped github repo from same author, see: https://github.com/eth-brownie/brownie/issues/1116
-// NOTE: If you want to use PausableUpgradeable
-// import "@upgradeable/contracts/utils/PausableUpgradeable.sol";
-
 struct StrategyParams {
     uint256 performanceFee;
     uint256 activation;
@@ -93,7 +89,7 @@ interface VaultAPI is IERC20 {
     /**
      * This is the main contact point where the Strategy interacts with the
      * Vault. It is critical that this call is handled as intended by the
-     * Strategy. Therefore, this function will be called by BaseStrategy to
+     * Strategy. Therefore, this function will be called by BaseStrategyUpgradeable to
      * make sure the integration is correct.
      */
     function report(
@@ -171,7 +167,7 @@ interface StrategyAPI {
  * @title Yearn Base Strategy
  * @author yearn.finance
  * @notice
- *  BaseStrategy implements all of the required functionality to interoperate
+ *  BaseStrategyUpgradeable implements all of the required functionality to interoperate
  *  closely with the Vault contract. This contract should be inherited and the
  *  abstract methods implemented to adapt the Strategy to the particular needs
  *  it has to create a return.
@@ -184,7 +180,7 @@ interface StrategyAPI {
  *  `harvest()`, and `harvestTrigger()` for further details.
  */
 
-abstract contract BaseStrategy {
+abstract contract BaseStrategyUpgradeable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     string public metadataURI;
@@ -312,9 +308,8 @@ abstract contract BaseStrategy {
         _;
     }
 
-    constructor(address _vault) public {
-        _initialize(_vault, msg.sender, msg.sender, msg.sender);
-    }
+
+    event Debug(string name, address value);
 
     /**
      * @notice
@@ -328,13 +323,21 @@ abstract contract BaseStrategy {
      * @param _keeper The adddress of the _keeper. _keeper
      * can harvest and tend a strategy.
      */
-    function _initialize(
+
+    
+    function initialize(
         address _vault,
         address _strategist,
         address _rewards,
         address _keeper
-    ) internal {
+    ) external {
+        emit Debug("Initialize", address(0));
+        emit Debug("want", address(want));
+
         require(address(want) == address(0), "Strategy already initialized");
+        
+        emit Debug("_vault", _vault);
+        emit Debug("_strategist", _strategist);
 
         vault = VaultAPI(_vault);
         want = IERC20(vault.token());
@@ -350,6 +353,8 @@ abstract contract BaseStrategy {
         debtThreshold = 0;
 
         vault.approve(rewards, uint256(-1)); // Allow rewards to be pulled
+        emit Debug("approveD", address(vault));
+
     }
 
     /**
@@ -797,7 +802,7 @@ abstract contract BaseStrategy {
      */
     function migrate(address _newStrategy) external {
         require(msg.sender == address(vault));
-        require(BaseStrategy(_newStrategy).vault() == vault);
+        require(BaseStrategyUpgradeable(_newStrategy).vault() == vault);
         prepareMigration(_newStrategy);
         want.safeTransfer(_newStrategy, want.balanceOf(address(this)));
     }
@@ -864,49 +869,5 @@ abstract contract BaseStrategy {
         for (uint256 i; i < _protectedTokens.length; i++) require(_token != _protectedTokens[i], "!protected");
 
         IERC20(_token).safeTransfer(governance(), IERC20(_token).balanceOf(address(this)));
-    }
-}
-
-abstract contract BaseStrategyInitializable is BaseStrategy {
-    bool public isOriginal = true;
-    event Cloned(address indexed clone);
-
-    constructor(address _vault) public BaseStrategy(_vault) {}
-
-    function initialize(
-        address _vault,
-        address _strategist,
-        address _rewards,
-        address _keeper
-    ) external virtual {
-        _initialize(_vault, _strategist, _rewards, _keeper);
-    }
-
-    function clone(address _vault) external returns (address) {
-        require(isOriginal, "!clone");
-        return this.clone(_vault, msg.sender, msg.sender, msg.sender);
-    }
-
-    function clone(
-        address _vault,
-        address _strategist,
-        address _rewards,
-        address _keeper
-    ) external returns (address newStrategy) {
-        // Copied from https://github.com/optionality/clone-factory/blob/master/contracts/CloneFactory.sol
-        bytes20 addressBytes = bytes20(address(this));
-
-        assembly {
-            // EIP-1167 bytecode
-            let clone_code := mload(0x40)
-            mstore(clone_code, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
-            mstore(add(clone_code, 0x14), addressBytes)
-            mstore(add(clone_code, 0x28), 0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000)
-            newStrategy := create(0, clone_code, 0x37)
-        }
-
-        BaseStrategyInitializable(newStrategy).initialize(_vault, _strategist, _rewards, _keeper);
-
-        emit Cloned(newStrategy);
     }
 }

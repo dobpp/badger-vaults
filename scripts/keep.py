@@ -1,3 +1,6 @@
+"""
+TODO: Adapt these to Badger Strats
+"""
 from brownie import accounts, network, interface, Vault, Token
 from brownie.network.gas.strategies import GasNowScalingStrategy
 from decimal import Decimal

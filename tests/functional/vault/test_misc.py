@@ -51,7 +51,10 @@ def test_credit_available_minDebtPerHarvest_larger_than_available(
         token, gov, gov, token.symbol() + " yVault", "yv" + token.symbol(), gov, gov
     )
     vault.setDepositLimit(MAX_UINT256, {"from": gov})
-    strategy = gov.deploy(TestStrategy, vault)
+    
+    strategy = gov.deploy(TestStrategy)
+    strategy.initialize(vault, gov, gov, gov, {"from": gov})
+
     vault.addStrategy(
         strategy,
         10000,  # 100% of Vault AUM
@@ -245,7 +248,9 @@ def test_sandwich_attack(
     token.transfer(attacker, balance, {"from": honest_lp})
 
     # we don't use the one in conftest because we want no rate limit
-    strategy = strategist.deploy(TestStrategy, vault)
+    strategy = strategist.deploy(TestStrategy)
+    strategy.initialize(vault, strategist, strategist, strategist)
+
     vault.setManagementFee(0, {"from": gov})
     vault.setPerformanceFee(0, {"from": gov})
     vault.addStrategy(strategy, 4_000, 0, MAX_UINT256, 0, {"from": gov})
