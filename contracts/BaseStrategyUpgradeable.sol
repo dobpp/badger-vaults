@@ -330,14 +330,8 @@ abstract contract BaseStrategyUpgradeable {
         address _strategist,
         address _rewards,
         address _keeper
-    ) external {
-        emit Debug("Initialize", address(0));
-        emit Debug("want", address(want));
-
+    ) public {
         require(address(want) == address(0), "Strategy already initialized");
-        
-        emit Debug("_vault", _vault);
-        emit Debug("_strategist", _strategist);
 
         vault = VaultAPI(_vault);
         want = IERC20(vault.token());
@@ -353,8 +347,6 @@ abstract contract BaseStrategyUpgradeable {
         debtThreshold = 0;
 
         vault.approve(rewards, uint256(-1)); // Allow rewards to be pulled
-        emit Debug("approveD", address(vault));
-
     }
 
     /**
