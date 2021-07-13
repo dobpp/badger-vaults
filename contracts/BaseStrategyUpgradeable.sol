@@ -308,9 +308,6 @@ abstract contract BaseStrategyUpgradeable {
         _;
     }
 
-
-    event Debug(string name, address value);
-
     /**
      * @notice
      *  Initializes the Strategy, this is called only once, when the
