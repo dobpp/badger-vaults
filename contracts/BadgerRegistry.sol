@@ -54,10 +54,10 @@ contract BadgerRegistry {
   using EnumerableSet for EnumerableSet.AddressSet;
 
 
-  /// Multisig. Vaults from here are considered Production ready
+  //@dev Multisig. Vaults from here are considered Production ready
   address GOVERNANCE = 0xB65cef03b9B89f99517643226d76e286ee999e77;
 
-  /// Given an Author Address, and Token, Return the Vault
+  //@dev Given an Author Address, and Token, Return the Vault
   mapping(address => EnumerableSet.AddressSet) private vaults;
 
   event NewVault(address author, address vault);
@@ -66,7 +66,7 @@ contract BadgerRegistry {
 
 
 
-  /// View Data for each strat we will return
+  //@dev View Data for each strat we will return
   struct StratInfo {
     string name;
 
@@ -121,7 +121,7 @@ contract BadgerRegistry {
     emit RemoveVault(msg.sender, vault);
   }
 
-  /// Retrieve a list of all Vault Addresses from the given author
+  //@dev Retrieve a list of all Vault Addresses from the given author
   function fromAuthor(address author) public view returns (address[] memory) {
     uint256 length = vaults[author].length();
     address[] memory list = new address[](length);
@@ -131,7 +131,7 @@ contract BadgerRegistry {
     return list;
   }
 
-  /// Retrieve a list of all Vaults and the basic Vault info
+  //@dev Retrieve a list of all Vaults and the basic Vault info
   function fromAuthorVaults(address author) public view returns (VaultInfo[] memory) {
     uint256 length = vaults[author].length();
 
@@ -158,7 +158,7 @@ contract BadgerRegistry {
   }
 
 
-  /// Given the Vault, retrieve all the data as well as all data related to the strategies
+  //@dev Given the Vault, retrieve all the data as well as all data related to the strategies
   function fromAuthorWithDetails(address author) public view returns (VaultInfo[] memory) {
     uint256 length = vaults[author].length();
     VaultInfo[] memory vaultData = new VaultInfo[](length);
@@ -219,7 +219,7 @@ contract BadgerRegistry {
     return vaultData;
   }
 
-  /// Promote a vault to Production
+  //@dev Promote a vault to Production
   //@dev Promote just means indexed by the Governance Address
   function promote(address vault) public {
     require(msg.sender == GOVERNANCE, "!gov");

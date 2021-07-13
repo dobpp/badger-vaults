@@ -29,7 +29,6 @@ def test_losses_updates_less_and_debt(chain, vault, strategy, gov, token):
     vault.deposit(5000, {"from": gov})
 
     chain.sleep(DAY // 10)
-    chain.sleep(1)
     strategy.harvest({"from": gov})
     assert token.balanceOf(strategy) == 500
 
@@ -37,7 +36,6 @@ def test_losses_updates_less_and_debt(chain, vault, strategy, gov, token):
     chain.sleep(DAY // 10)
     strategy._takeFunds(100, {"from": gov})
     vault.deposit(100, {"from": gov})  # NOTE: total assets doesn't change
-    chain.sleep(1)
     vault.setStrategyEnforceChangeLimit(strategy, False, {"from": gov})
     strategy.harvest({"from": gov})
     params = vault.strategies(strategy).dict()
@@ -73,7 +71,6 @@ def test_total_loss(chain, vault, strategy, gov, token):
     vault.addStrategy(strategy, 10_000, 0, 2 ** 256 - 1, 1_000, {"from": gov})
     token.approve(vault, 2 ** 256 - 1, {"from": gov})
     vault.deposit(5000, {"from": gov})
-    chain.sleep(1)
     strategy.harvest({"from": gov})
     assert token.balanceOf(strategy) == 5000
 
@@ -95,7 +92,6 @@ def test_loss_should_be_removed_from_locked_profit(chain, vault, strategy, gov, 
     vault.addStrategy(strategy, 1000, 0, 1000, 0, {"from": gov})
     token.approve(vault, 2 ** 256 - 1, {"from": gov})
     vault.deposit(5000, {"from": gov})
-    chain.sleep(1)
     vault.setStrategyEnforceChangeLimit(strategy, False, {"from": gov})
     strategy.harvest({"from": gov})
     assert token.balanceOf(strategy) == 500

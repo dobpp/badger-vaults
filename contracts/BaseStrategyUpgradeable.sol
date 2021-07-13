@@ -193,7 +193,7 @@ abstract contract BaseStrategyUpgradeable {
      * @return A string which holds the current API version of this contract.
      */
     function apiVersion() public pure returns (string memory) {
-        return "0.4.2";
+        return "0.4.3";
     }
 
     /**
@@ -625,7 +625,9 @@ abstract contract BaseStrategyUpgradeable {
         // We usually don't need tend, but if there are positions that need
         // active maintainence, overriding this function is how you would
         // signal for that.
-        uint256 callCost = ethToWant(callCostInWei);
+        // If your implementation uses the cost of the call in want, you can
+        // use uint256 callCost = ethToWant(callCostInWei);
+
         return false;
     }
 

@@ -7,6 +7,8 @@ def quick_deploy(gov, vault, TestStrategy):
     strat = gov.deploy(TestStrategy)
     strat.initialize(vault, gov, gov, gov)
     return strat
+MAX_UINT256 = 2 ** 256 - 1
+
 
 def test_multiple_withdrawals(token, gov, Vault, TestStrategy, chain):
     # Need a fresh vault to do this math right
@@ -36,7 +38,6 @@ def test_multiple_withdrawals(token, gov, Vault, TestStrategy, chain):
             0,  # No fee
             {"from": gov},
         )
-    chain.sleep(1)
 
     for s in strategies:  # Seed all the strategies with debt
         s.harvest({"from": gov})
@@ -228,7 +229,6 @@ def test_withdrawal_with_empty_queue(
     token.transferFrom(gov, guardian, token.balanceOf(gov), {"from": gov})
 
     chain.sleep(8640)
-    chain.sleep(1)
     vault.setStrategyEnforceChangeLimit(strategy, False, {"from": gov})
     strategy.harvest({"from": gov})
     assert token.balanceOf(vault) < vault.totalAssets()
@@ -317,7 +317,6 @@ def test_user_withdraw(chain, gov, token, vault, strategy, rando):
     deposit = vault.totalAssets()
     pricePerShareBefore = vault.pricePerShare()
     token.transfer(strategy, vault.totalAssets(), {"from": gov})  # seed some profit
-    chain.sleep(1)
     vault.setStrategyEnforceChangeLimit(strategy, False, {"from": gov})
     strategy.harvest({"from": gov})
 
@@ -416,7 +415,6 @@ def test_token_amount_does_not_change_on_deposit_withdrawal(
     vault.updateStrategyPerformanceFee(strategy, 0, {"from": gov})
     vault.setLockedProfitDegradation(1e10, {"from": gov})
     # test is only valid if some profit are locked.
-    chain.sleep(1)
     strategy.harvest()
     token.transfer(strategy, 100, {"from": gov})
     chain.sleep(1)
@@ -437,3 +435,29 @@ def test_token_amount_does_not_change_on_deposit_withdrawal(
 
     assert deposit.block_number == withdraw.block_number
     assert token.balanceOf(rando) == balanceBefore
+
+
+def test_withdraw_not_enough_funds_with_gains(
+    chain, gov, token, vault, strategy, rando
+):
+    vault.transfer(rando, vault.balanceOf(gov) / 2, {"from": gov})
+    vault.updateStrategyMaxDebtPerHarvest(strategy, MAX_UINT256, {"from": gov})
+    vault.updateStrategyDebtRatio(strategy, 10_000, {"from": gov})
+    vault.setManagementFee(0, {"from": gov})
+    vault.setPerformanceFee(0, {"from": gov})
+    vault.updateStrategyPerformanceFee(strategy, 0, {"from": gov})
+
+    strategy.harvest()
+
+    balance = token.balanceOf(strategy)
+    token.transfer(strategy, 150 * 10 ** token.decimals(), {"from": gov})
+    vault.removeStrategyFromQueue(strategy, {"from": gov})
+    chain.sleep(1)
+    strategy.harvest()
+    chain.sleep(1)
+    priceBefore = vault.pricePerShare()
+
+    vault.withdraw(balance / 10, {"from": rando})
+    priceAfter = vault.pricePerShare()
+
+    assert priceBefore <= priceAfter  # with decimals=2 price remains the same.
