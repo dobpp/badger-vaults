@@ -637,14 +637,6 @@ def setWithdrawalQueue(queue: address[MAXIMUM_STRATEGIES]):
     log UpdateWithdrawalQueue(queue)
 
 @internal
-def lock_for_block(account: address):
-    """
-    @notice used to force one operation per block per EOA
-    @notice UNUSED
-    """
-    self.blockLock[account] = block.number
-
-@internal
 def erc20_safe_transfer(token: address, receiver: address, amount: uint256):
     # Used only to send tokens that are not the type managed by this Vault.
     # HACK: Used to handle non-compliant tokens like USDT
