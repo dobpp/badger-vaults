@@ -9,7 +9,6 @@ Badger V2 Vaults - Fork of Yearn with extra checks
 Upgradeable Contracts
 Lost ability to clone strategies
 Pausability of vault
-Lock for Block
 Smart Contracts need to be approved
 
 pendingGovernance is public
@@ -191,3 +190,40 @@ Documentation [webpage](https://www.notion.so/Badger-V2-Vaults-and-Brownie-Mix-5
 
 For questions not covered in the docs, please visit [our Discord server](https://discord.gg/dwSdN9g6Mw).
 
+
+
+## Registry Notes
+Test for Registry
+Deploy Vault
+Deploy Strat
+Attach Strat to Vault
+Attach to Registry
+a[0] = 0x66aB6D9362d4F35596279692F0251Db635165871
+
+
+x = run("deploy_badger_strategy")
+Want
+0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599
+
+
+This deploys vault and Strats
+When you deploy, set governance to your a[0] to ensure you can add the strat later
+
+Strat
+0x2B7F219D0f574D1bB7893BddDb67E40f4Aa8d10D
+
+
+vault = Vault[1]
+vault.addStrategy(x, 0, 0, 0, 0, 0, 0, {"from": a[0]})
+vault.withdrawalQueue(0)
+
+
+Deploy Registry
+BadgerRegistry.deploy({"from": a[0]})
+BadgerRegistry[0].add(vault)
+
+Then TEST
+
+BadgerRegistry[0].fromAuthor(a[0])
+BadgerRegistry[0].fromAuthorVaults(a[0])
+BadgerRegistry[0].fromAuthorWithDetails(a[0])
