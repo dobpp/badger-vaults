@@ -219,9 +219,9 @@ contract BadgerRegistry {
     return vaultData;
   }
 
-  // Promote a vault to Production
+  /// Promote a vault to Production
+  //@dev Promote just means indexed by the Governance Address
   function promote(address vault) public {
-    // TODO: Add security checks
     require(msg.sender == GOVERNANCE, "!gov");
     vaults[msg.sender].add(vault);
 
