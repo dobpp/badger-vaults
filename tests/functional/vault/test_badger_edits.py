@@ -100,12 +100,10 @@ def test_vault_defend_add(gov, vault, deposit_contract):
 
 def test_flash_loan_lock_for_block(gov, vault, flashloan_contract):
   ## Can't work if not approved
-  ## NOTE: Can't get error message
   with brownie.reverts():
     flashloan_contract.flashLoan(1, {"from": gov})
-  
-  ## If I approve it will revert due to block for lock
+
   vault.approveContractAccess(flashloan_contract, {"from": gov})
-  ## NOTE: Can't get error message
-  with brownie.reverts():
-    flashloan_contract.flashLoan(1, {"from": gov})
+
+  ## TX won't fail because we no longer have block_for_lock
+  flashloan_contract.flashLoan(1, {"from": gov})

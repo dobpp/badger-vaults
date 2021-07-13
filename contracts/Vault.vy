@@ -640,6 +640,7 @@ def setWithdrawalQueue(queue: address[MAXIMUM_STRATEGIES]):
 def lock_for_block(account: address):
     """
     @notice used to force one operation per block per EOA
+    @notice UNUSED
     """
     self.blockLock[account] = block.number
 
@@ -706,9 +707,6 @@ def transfer(receiver: address, amount: uint256) -> bool:
     """
     assert not self.paused # dev: paused
 
-    assert self.blockLock[msg.sender] < block.number # dev: locked for block
-    self.lock_for_block(msg.sender)
-
     self._transfer(msg.sender, receiver, amount)
     return True
 
@@ -733,9 +731,6 @@ def transferFrom(sender: address, receiver: address, amount: uint256) -> bool:
         0x0, otherwise the transaction will fail.
     """
     assert not self.paused # dev: paused
-
-    assert self.blockLock[msg.sender] < block.number # dev: locked for block
-    self.lock_for_block(msg.sender)
 
     # Unlimited approval (saves an SSTORE)
     if (self.allowance[sender][msg.sender] < MAX_UINT256):
@@ -943,9 +938,6 @@ def deposit(_amount: uint256 = MAX_UINT256, recipient: address = msg.sender) -> 
     assert not self.emergencyShutdown  # Deposits are locked out
     assert recipient not in [self, ZERO_ADDRESS]
 
-    assert self.blockLock[msg.sender] < block.number # dev: locked for block
-    self.lock_for_block(msg.sender)
-
     assert self.approved[msg.sender] or msg.sender == tx.origin # dev: defend
 
 
@@ -1113,9 +1105,6 @@ def withdraw(
     @return The quantity of tokens redeemed for `_shares`.
     """
     assert not self.paused # dev: paused
-
-    assert self.blockLock[msg.sender] < block.number # dev: locked for block
-    self.lock_for_block(msg.sender)
 
     assert self.approved[msg.sender] or msg.sender == tx.origin # dev: defend
 
