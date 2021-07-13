@@ -54,10 +54,10 @@ contract BadgerRegistry {
   using EnumerableSet for EnumerableSet.AddressSet;
 
 
-  // Multisig. Vaults from here are considered Production ready
+  /// Multisig. Vaults from here are considered Production ready
   address GOVERNANCE = 0xB65cef03b9B89f99517643226d76e286ee999e77;
 
-  // Given an Author Address, and Token, Return the Vault
+  /// Given an Author Address, and Token, Return the Vault
   mapping(address => EnumerableSet.AddressSet) private vaults;
 
   event NewVault(address author, address vault);
@@ -66,7 +66,7 @@ contract BadgerRegistry {
 
 
 
-  // View Data for each strat we will return
+  /// View Data for each strat we will return
   struct StratInfo {
     string name;
 
@@ -89,7 +89,7 @@ contract BadgerRegistry {
     address customCheck;
   }
 
-  // Vault data we will return for each Vault
+  /// Vault data we will return for each Vault
   struct VaultInfo {
     string name;
     string symbol;
@@ -107,19 +107,21 @@ contract BadgerRegistry {
 
 
 
-  // Anyone can add a vault to here
+  /// Anyone can add a vault to here, it will be indexed by their address
   function add(address vault) public {
     vaults[msg.sender].add(vault);
     
     emit NewVault(msg.sender, vault);
   }
 
+  /// Remove the vault from your index
   function remove(address vault) public {
     vaults[msg.sender].remove(vault);
 
     emit RemoveVault(msg.sender, vault);
   }
 
+  /// Retrieve a list of all Vault Addresses from the given author
   function fromAuthor(address author) public view returns (address[] memory) {
     uint256 length = vaults[author].length();
     address[] memory list = new address[](length);
@@ -129,6 +131,7 @@ contract BadgerRegistry {
     return list;
   }
 
+  /// Retrieve a list of all Vaults and the basic Vault info
   function fromAuthorVaults(address author) public view returns (VaultInfo[] memory) {
     uint256 length = vaults[author].length();
 
@@ -155,7 +158,7 @@ contract BadgerRegistry {
   }
 
 
-  // Given one Author, retrieve all their vaults and the strats associated with them
+  /// Given the Vault, retrieve all the data as well as all data related to the strategies
   function fromAuthorWithDetails(address author) public view returns (VaultInfo[] memory) {
     uint256 length = vaults[author].length();
     VaultInfo[] memory vaultData = new VaultInfo[](length);
