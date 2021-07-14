@@ -68,6 +68,7 @@ contract BadgerRegistry {
 
   //@dev View Data for each strat we will return
   struct StratInfo {
+    address at;
     string name;
 
     address strategist;
@@ -91,6 +92,7 @@ contract BadgerRegistry {
 
   /// Vault data we will return for each Vault
   struct VaultInfo {
+    address at;
     string name;
     string symbol;
 
@@ -141,6 +143,7 @@ contract BadgerRegistry {
       StratInfo[] memory allStrats = new StratInfo[](0);
 
       VaultInfo memory data = VaultInfo({
+        at: vaults[author].at(x),
         name: vault.name(),
         symbol: vault.symbol(),
         token: vault.token(),
@@ -179,6 +182,7 @@ contract BadgerRegistry {
         StratView strat = StratView(vault.withdrawalQueue(z));
         StrategyParams memory params = vault.strategies(vault.withdrawalQueue(z));
         StratInfo memory stratData = StratInfo({
+          at: vault.withdrawalQueue(z),
           name: strat.name(),
           strategist: strat.strategist(),
           rewards: strat.rewards(),
@@ -202,6 +206,7 @@ contract BadgerRegistry {
       }
 
       VaultInfo memory data = VaultInfo({
+        at: vaults[author].at(x),
         name: vault.name(),
         symbol: vault.symbol(),
         token: vault.token(),

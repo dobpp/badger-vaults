@@ -227,3 +227,21 @@ Then TEST
 BadgerRegistry[0].fromAuthor(a[0])
 BadgerRegistry[0].fromAuthorVaults(a[0])
 BadgerRegistry[0].fromAuthorWithDetails(a[0])
+
+
+# Deployments
+## NOTE: Subject to changes - WIZARDS ONLY
+
+### Polygon 
+#### Badger Registry
+https://polygonscan.com/address/0x2F054176c888A4469797bE1E389997e6BB040950#writeContract
+
+
+Polygon Registry
+0xD4A5A087107fA9434E490424A27cE2130bE24d4D
+
+Vault Upgradeable Proxy - wBTC Vault
+0xc2bc53BCD33cF43124715038315e11F2577fbd4E
+
+Vault Logic
+0xdbf515d03240acb3c0f7776782a7863b892af709
