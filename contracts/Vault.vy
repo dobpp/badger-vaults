@@ -140,6 +140,8 @@ event UpdateRewards:
 event UpdateDepositLimit:
     depositLimit: uint256 # New active deposit limit
 
+event UpdateWithdrawalFee:
+    withdrawalFee: uint256 # New active withdrawal fee
 
 event UpdatePerformanceFee:
     performanceFee: uint256 # New active performance fee
@@ -242,6 +244,8 @@ rewards: public(address)  # Rewards contract where Governance fees are sent to
 managementFee: public(uint256)
 # Governance Fee for performance of Vault (given to `rewards`)
 performanceFee: public(uint256)
+# Governance Fee for withdrawal of vault (given to `rewards`)
+withdrawalFee: public(uint256)
 MAX_BPS: constant(uint256) = 10_000  # 100%, or 10k basis points
 # NOTE: A four-century period will be missing 3 of its 100 Julian leap years, leaving 97.
 #       So the average year has 365 + 97/400 = 365.2425 days
@@ -314,6 +318,8 @@ def initialize(
     log UpdateRewards(rewards)
     self.guardian = guardian
     log UpdateGuardian(guardian)
+    self.withdrawalFee = 0  # 0%
+    log UpdateWithdrawalFee(convert(0, uint256))
     self.performanceFee = 1000  # 10% of yield (per Strategy)
     log UpdatePerformanceFee(convert(1000, uint256))
     self.managementFee = 200  # 2% per year
@@ -478,6 +484,21 @@ def setDepositLimit(limit: uint256):
     self.depositLimit = limit
     log UpdateDepositLimit(limit)
 
+@external
+def setWithdrawalFee(fee: uint256):
+    """
+    @notice
+        Used to change the value of `withdrawalFee`.
+
+        Should set this value below the maximum strategist performance fee.
+
+        This may only be called by governance.
+    @param fee The new performance fee to use.
+    """
+    assert msg.sender == self.governance
+    assert fee <= 50 # 50 Basis Points = 0.5%
+    self.withdrawalFee = fee
+    log UpdateWithdrawalFee(fee)
 
 @external
 def setPerformanceFee(fee: uint256):
@@ -1187,8 +1208,14 @@ def withdraw(
     self.balanceOf[msg.sender] -= shares
     log Transfer(msg.sender, ZERO_ADDRESS, shares)
 
+    # Take withdrawal Fees
+    fee: uint256 = value * self.withdrawalFee / MAX_BPS
+    # Send them to rewards
+    if(fee > 0):
+        self.erc20_safe_transfer(self.token.address, self.rewards, fee)
+
     # Withdraw remaining balance to _recipient (may be different to msg.sender) (minus fee)
-    self.erc20_safe_transfer(self.token.address, recipient, value)
+    self.erc20_safe_transfer(self.token.address, recipient, value - fee)
 
     return value
 

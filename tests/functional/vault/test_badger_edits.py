@@ -107,3 +107,60 @@ def test_flash_loan_lock_for_block(gov, vault, flashloan_contract):
 
   ## TX won't fail because we no longer have block_for_lock
   flashloan_contract.flashLoan(1, {"from": gov})
+
+
+def test_withdrawal_fee_permission(gov, vault, rando, keeper, strategist):
+  ## Reverts because of permissions
+  with brownie.reverts():
+    vault.setWithdrawalFee(1, {"from": rando})
+
+  with brownie.reverts():
+    vault.setWithdrawalFee(1, {"from": keeper})
+  
+  with brownie.reverts():
+    vault.setWithdrawalFee(1, {"from": strategist})
+  
+  ## Revers because it's too high
+  with brownie.reverts():
+    vault.setWithdrawalFee(100, {"from": gov})
+  
+  vault.setWithdrawalFee(50, {"from": gov})
+
+  assert vault.withdrawalFee() == 50
+
+def test_withdrawal_fee_default(vault):
+  ## Vault Withdrawal Fees are 0 by default
+  assert vault.withdrawalFee() == 0
+
+def test_withdrawal_fee_math(gov, vault, token, rando):
+  vault.setWithdrawalFee(50, {"from": gov})
+
+  token.transfer(rando, 1000, {"from": gov})
+
+  token.approve(vault, 1000, {"from": rando})
+
+  vault.deposit(1000, {"from": rando})
+
+  vault.withdraw({"from": rando})
+
+  assert token.balanceOf(rando) == 1000 * (1-(50 / 10000))
+
+
+def test_withdrawal_fee_math_other_ppl(gov, vault, token, rando, strategist, keeper):
+  vault.setWithdrawalFee(50, {"from": gov})
+
+  token.transfer(keeper, 1000, {"from": gov})
+  token.transfer(strategist, 1000, {"from": gov})
+  token.transfer(rando, 1000, {"from": gov})
+
+  token.approve(vault, 1000, {"from": keeper})
+  token.approve(vault, 1000, {"from": strategist})
+  token.approve(vault, 1000, {"from": rando})
+
+  vault.deposit(1000, {"from": keeper})
+  vault.deposit(1000, {"from": strategist})
+  vault.deposit(1000, {"from": rando})
+
+  vault.withdraw({"from": rando})
+
+  assert token.balanceOf(rando) == 1000 * (1-(50 / 10000))
