@@ -871,7 +871,6 @@ def totalAssets() -> uint256:
     """
     return self._totalAssets()
 
-
 @view
 @internal
 def _calculateLockedProfit() -> uint256:
@@ -1223,6 +1222,16 @@ def withdraw(
 @view
 @external
 def pricePerShare() -> uint256:
+    """
+    @notice Gives the price for a single Vault share.
+    @dev See dev note on `withdraw`.
+    @return The value of a single share.
+    """
+    return self._shareValue(10 ** self.decimals)
+
+@view
+@external
+def pricePerFullShare() -> uint256:
     """
     @notice Gives the price for a single Vault share.
     @dev See dev note on `withdraw`.

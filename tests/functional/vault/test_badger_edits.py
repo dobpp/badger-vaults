@@ -164,3 +164,20 @@ def test_withdrawal_fee_math_other_ppl(gov, vault, token, rando, strategist, kee
   vault.withdraw({"from": rando})
 
   assert token.balanceOf(rando) == 1000 * (1-(50 / 10000))
+
+
+
+## View Method Tests
+def test_view_price_perShare(gov, token, vault):
+  assert vault.pricePerShare() == vault.pricePerFullShare()
+
+  token.approve(vault, 1000, {"from": gov})
+  vault.deposit(1000, {"from": gov})
+
+  assert vault.pricePerShare() == vault.pricePerFullShare()
+
+  vault.withdraw({"from": gov})
+  
+  assert vault.pricePerShare() == vault.pricePerFullShare()
+
+
