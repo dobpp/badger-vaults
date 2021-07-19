@@ -67,10 +67,7 @@ contract Strategy is BaseStrategyUpgradeable {
         MASTERCHEF.harvest(pid, address(this));
         uint256 toSwap = reward.balanceOf(address(this));
 
-        // TODO: Swap into want
-        _profit = _swapToWant(toSwap);
-        _loss = 0;
-        _debtPayment = 0;
+        // TODO: Put sushi to badgerTree to distribute
     }
 
     function adjustPosition(uint256 _debtOutstanding) internal override {
