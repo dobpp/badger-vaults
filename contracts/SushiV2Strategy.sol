@@ -6,7 +6,7 @@ pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 // These are the core Yearn libraries
-import {BaseStrategy, StrategyParams} from "./BaseStrategyUpgradeable.sol";
+import {BaseStrategyUpgradeable, StrategyParams} from "./BaseStrategyUpgradeable.sol";
 import {SafeERC20, SafeMath, IERC20, Address} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import {ISushiChef} from "../interfaces/sushi/ISushichef.sol";
@@ -15,14 +15,14 @@ import "../interfaces/sushi/IxSushi.sol";
 
 /// @author Khanh
 /// @title Sushi Masterchef v2 strategy
-contract Strategy is BaseStrategy {
+contract Strategy is BaseStrategyUpgradeable {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
 
     IERC20 public reward;
     uint256 public pid = 0;
-    address public constant sushi = 0x0b3f868e0be5597d5db7feb59e1cadbb0fdda50a;
+    address public constant sushi = 0x0b3F868E0BE5597D5DB7fEB59E1CADBb0fdDa50a;
     address public constant chef = 0x0769fd68dFb93167989C6f7254cd0D766Fb2841F;
 
     address public WETH;
@@ -35,7 +35,8 @@ contract Strategy is BaseStrategy {
     constructor(
         address _vault,
         address[2] memory _wantConfig
-    ) public BaseStrategy(_vault) {
+    ) public {
+        initialize(_vault, address(this), address(this), address(this));
         MASTERCHEF = ISushiChef(chef);
         want.approve(chef, uint256(-1));
         badgerTree = _wantConfig[1];
@@ -53,7 +54,7 @@ contract Strategy is BaseStrategy {
     }
 
     /// @notice Harvest with profit calculation
-    function prepareReturn()
+    function prepareReturn(uint256 _debtOutstanding)
         internal
         override
         returns (
@@ -128,7 +129,7 @@ contract Strategy is BaseStrategy {
         returns (address[] memory)
     {
         address[] memory protected = new address[](2);
-        protected[0] = want;
+        protected[0] = address(want);
         protected[1] = sushi;
         // NOTE: May need to add lpComponent anyway
         return protected;

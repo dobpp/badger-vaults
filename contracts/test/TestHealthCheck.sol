@@ -3,7 +3,7 @@ pragma solidity ^0.6.12;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {ICustomHealthCheck} from "../interfaces/ICustomHealthCheck.sol";
+import {ICustomHealthCheck} from "../../interfaces/ICustomHealthCheck.sol";
 
 contract TestHealthCheck is ICustomHealthCheck {
     bool pass;
