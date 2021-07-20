@@ -32,14 +32,20 @@ contract Strategy is BaseStrategyUpgradeable {
 
     IUniswapRouterV2 public ROUTER;
 
-    constructor(
+    function initialize(
         address _vault,
-        address[2] memory _wantConfig
-    ) public {
-        initialize(_vault, address(this), address(this), address(this));
+        address _strategist,
+        address _rewards,
+        address _keeper
+    ) external {
+        BaseStrategyUpgradeable.initialize(
+            _vault, 
+            _strategist,
+            _rewards,
+            _keeper
+        );
         MASTERCHEF = ISushiChef(chef);
         want.approve(chef, uint256(-1));
-        badgerTree = _wantConfig[1];
     }
 
     /// @notice Name of Strategy
