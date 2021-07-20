@@ -11,7 +11,7 @@ import {SafeERC20, SafeMath, IERC20, Address} from "@openzeppelin/contracts/toke
 
 import {ISushiChef} from "../interfaces/sushi/ISushichef.sol";
 import {IUniswapRouterV2} from "../interfaces/uniswap/IUniswapRouterV2.sol";
-import "../interfaces/sushi/IxSushi.sol";
+import "../interfaces/sushi/IRewarder.sol";
 
 /// @author Khanh
 /// @title Sushi Masterchef v2 strategy
@@ -24,6 +24,7 @@ contract Strategy is BaseStrategyUpgradeable {
     uint256 public pid = 0;
     address public constant sushi = 0x0b3F868E0BE5597D5DB7fEB59E1CADBb0fdDa50a;
     address public constant chef = 0x0769fd68dFb93167989C6f7254cd0D766Fb2841F;
+    address public constant wmatic = 0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270;
 
     address public WETH;
     address public badgerTree;
@@ -36,7 +37,8 @@ contract Strategy is BaseStrategyUpgradeable {
         address _vault,
         address _strategist,
         address _rewards,
-        address _keeper
+        address _keeper,
+        uint256 _pid
     ) external {
         BaseStrategyUpgradeable.initialize(
             _vault, 
@@ -46,6 +48,7 @@ contract Strategy is BaseStrategyUpgradeable {
         );
         MASTERCHEF = ISushiChef(chef);
         want.approve(chef, uint256(-1));
+        pid = _pid;
     }
 
     /// @notice Name of Strategy
@@ -59,6 +62,24 @@ contract Strategy is BaseStrategyUpgradeable {
         return want.balanceOf(address(this)).add(staked);
     }
 
+    function checkPendingReward() external view returns (uint256, uint256) {
+        (uint256 _pendingSushi, uint256 _pendingMatic) = checkPendingRewardInternal();
+        return (_pendingSushi, _pendingMatic);
+    }
+
+    function checkPendingRewardInternal() internal returns (uint256, uint256) {
+        uint256 _pendingSushi = MASTERCHEF.pendingSushi(pid, address(this));
+        IRewarder rewarder = MASTERCHEF.rewarder(pid);
+        (, uint256[] memory _rewardAmounts) = rewarder.pendingTokens(poolId, address(this), 0);
+
+        uint256 _pendingMatic;
+        if (_rewardAmounts.length > 0) {
+            _pendingMatic = _rewardAmounts[0];
+        }
+        // return IMiniChefV2(miniChef).pendingSushi(poolId, address(this));
+        return (_pendingSushi, _pendingMatic);
+    }
+
     /// @notice Harvest with profit calculation
     function prepareReturn(uint256 _debtOutstanding)
         internal
@@ -70,9 +91,28 @@ contract Strategy is BaseStrategyUpgradeable {
         )
     {
         // TODO: Deal with Double Rewards
-        MASTERCHEF.harvest(pid, address(this));
-        uint256 toSwap = reward.balanceOf(address(this));
+        uint256 _before = want.balanceOf(address(this));
 
+        (uint256 pendingSushi, uint256 pendingMatic) = checkPendingRewardInternal();
+
+        if (pendingSushi > 0) {
+            MASTERCHEF.harvest(pid, address(this));
+        }
+
+        // swap wmatic to sushi
+        uint256 _wmatic = IERC20(wmatic).balanceOf(address(this));
+        if (_wmatic > 0 ) {
+            _swapWMaticToWant(_wmatic);
+        }
+        
+        _debtPayment = _debtOutstanding;
+
+        if (_debtPayment > 0) {
+            MASTERCHEF.withdraw(_pid, _debtPayment);
+        }
+
+        _profit = want.balanceOf(address(this)).sub(_before);
+        _loss = 0;
         // TODO: Put sushi to badgerTree to distribute
     }
 
@@ -164,11 +204,11 @@ contract Strategy is BaseStrategyUpgradeable {
     }
 
     /// @notice swap sushi to want
-    function _swapToWant(uint256 toSwap) internal returns (uint256) {
+    function _swapWMaticToWant(uint256 toSwap) internal returns (uint256) {
         uint256 startingWantBalance = want.balanceOf(address(this));
 
         address[] memory path = new address[](3);
-        path[0] = address(sushi);
+        path[0] = wmatic;
         path[1] = WETH;
         path[2] = address(want);
 
