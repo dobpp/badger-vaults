@@ -9,7 +9,7 @@ pragma experimental ABIEncoderV2;
 import {BaseStrategyUpgradeable, StrategyParams} from "./BaseStrategyUpgradeable.sol";
 import {SafeERC20, SafeMath, IERC20, Address} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-import {ISushiChef} from "../interfaces/sushi/ISushichef.sol";
+import {IMiniChefV2} from "../interfaces/sushi/ISushichef.sol";
 import {IUniswapRouterV2} from "../interfaces/uniswap/IUniswapRouterV2.sol";
 import "../interfaces/sushi/IRewarder.sol";
 
@@ -24,12 +24,12 @@ contract Strategy is BaseStrategyUpgradeable {
     uint256 public pid = 0;
     address public constant sushi = 0x0b3F868E0BE5597D5DB7fEB59E1CADBb0fdDa50a;
     address public constant chef = 0x0769fd68dFb93167989C6f7254cd0D766Fb2841F;
-    address public constant wmatic = 0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270;
+    address public constant wmatic = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
 
     address public WETH;
     address public badgerTree;
 
-    ISushiChef public MASTERCHEF;
+    IMiniChefV2 public MASTERCHEF;
 
     IUniswapRouterV2 public ROUTER;
 
@@ -46,7 +46,7 @@ contract Strategy is BaseStrategyUpgradeable {
             _rewards,
             _keeper
         );
-        MASTERCHEF = ISushiChef(chef);
+        MASTERCHEF = IMiniChefV2(chef);
         want.approve(chef, uint256(-1));
         pid = _pid;
     }
@@ -62,7 +62,7 @@ contract Strategy is BaseStrategyUpgradeable {
         return want.balanceOf(address(this)).add(staked);
     }
 
-    function checkPendingReward() external view returns (uint256, uint256) {
+    function checkPendingReward() external returns (uint256, uint256) {
         (uint256 _pendingSushi, uint256 _pendingMatic) = checkPendingRewardInternal();
         return (_pendingSushi, _pendingMatic);
     }
@@ -70,13 +70,12 @@ contract Strategy is BaseStrategyUpgradeable {
     function checkPendingRewardInternal() internal returns (uint256, uint256) {
         uint256 _pendingSushi = MASTERCHEF.pendingSushi(pid, address(this));
         IRewarder rewarder = MASTERCHEF.rewarder(pid);
-        (, uint256[] memory _rewardAmounts) = rewarder.pendingTokens(poolId, address(this), 0);
+        (, uint256[] memory _rewardAmounts) = rewarder.pendingTokens(pid, address(this), 0);
 
         uint256 _pendingMatic;
         if (_rewardAmounts.length > 0) {
             _pendingMatic = _rewardAmounts[0];
         }
-        // return IMiniChefV2(miniChef).pendingSushi(poolId, address(this));
         return (_pendingSushi, _pendingMatic);
     }
 
@@ -108,7 +107,7 @@ contract Strategy is BaseStrategyUpgradeable {
         _debtPayment = _debtOutstanding;
 
         if (_debtPayment > 0) {
-            MASTERCHEF.withdraw(_pid, _debtPayment);
+            MASTERCHEF.withdraw(pid, _debtPayment, address(this));
         }
 
         _profit = want.balanceOf(address(this)).sub(_before);
@@ -119,8 +118,15 @@ contract Strategy is BaseStrategyUpgradeable {
     function adjustPosition(uint256 _debtOutstanding) internal override {
         uint256 _beforeLp = want.balanceOf(address(this));
 
+        if(_beforeLp > _debtOutstanding){
+            MASTERCHEF.deposit(pid, _beforeLp.sub(_debtOutstanding), address(this));
+        }
+
+        if(_debtOutstanding > _beforeLp){
+            // We need to withdraw
+            MASTERCHEF.withdraw(pid, _debtOutstanding.sub(_beforeLp), address(this));
+        }
         // Note: Deposit of zero harvests rewards balance, but go ahead and deposit idle want if we have it
-        MASTERCHEF.deposit(pid, _beforeLp);
     }
 
     /// @notice Withdraw amount of want token from Masterchef
@@ -134,7 +140,7 @@ contract Strategy is BaseStrategyUpgradeable {
 
         if (_preWant < _amountNeeded) {
             uint256 _toWithdraw = _amountNeeded.sub(_preWant);
-            MASTERCHEF.withdraw(pid, _toWithdraw);
+            MASTERCHEF.withdraw(pid, _toWithdraw, address(this));
         }
 
         uint256 totalAssets = want.balanceOf(address(this));

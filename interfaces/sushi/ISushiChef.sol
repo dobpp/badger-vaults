@@ -1,34 +1,29 @@
 // SPDX-License-Identifier: MIT
-
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.7;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./IRewarder.sol";
 
-// Info of each pool.
-struct PoolInfo {
-    IERC20 lpToken; // Address of LP token contract.
-    uint256 allocPoint; // How many allocation points assigned to this pool. SUSHIs to distribute per block.
-    uint256 lastRewardBlock; // Last block number that SUSHIs distribution occurs.
-    uint256 accSushiPerShare; // Accumulated SUSHIs per share, times 1e12. See below.
-}
+interface IMiniChefV2 {
+    struct UserInfo {
+        uint256 amount;
+        uint256 rewardDebt;
+    }
 
-interface ISushiChef {
-    // ===== Write =====
-    function deposit(uint256 _pid, uint256 _amount) external;
+    struct PoolInfo {
+        uint128 accSushiPerShare;
+        uint64 lastRewardTime;
+        uint64 allocPoint;
+    }
 
-    function withdraw(uint256 _pid, uint256 _amount) external;
-
-    function withdrawAndHarvest(
-        uint256 _pid,
-        uint256 _amount,
-        address _to
-    ) external;
-
-    function harvest(uint256 _pid, address _to) external;
-
-    function userInfo(uint256 _pid, address _user)
-        external
-        view
-        returns (uint256, uint256);
+    function rewarder(uint256 _pid) external view returns (IRewarder);
+    function poolLength() external view returns (uint256);
+    function updatePool(uint256 pid) external returns (IMiniChefV2.PoolInfo memory);
+    function userInfo(uint256 _pid, address _user) external view returns (uint256, uint256);
+    function deposit(uint256 pid, uint256 amount, address to) external;
+    function withdraw(uint256 pid, uint256 amount, address to) external;
+    function harvest(uint256 pid, address to) external;
+    function withdrawAndHarvest(uint256 pid, uint256 amount, address to) external;
+    function emergencyWithdraw(uint256 pid, address to) external;
+    function pendingSushi(uint256 _pid, address _user) external view returns (uint256 pending);
 }
